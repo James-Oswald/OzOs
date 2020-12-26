@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "string": "c"
+    },
+    "C_Cpp.default.compilerPath": "$HOME/os/cross/bin/i686-elf-gcc",
+    "C_Cpp.default.cStandard": "c99"
+}

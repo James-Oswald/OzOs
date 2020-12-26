@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "ozOS",
+            "includePath": [
+                "${workspaceFolder}/*"
+            ],
+            "defines": [],
+            "compilerPath": "/home/james/os/cross/bin/i686-elf-gcc",
+            //"intelliSenseMode": "gcc-x86",
+            "compilerArgs": [
+                "-std=gnu99",
+                "-ffreestanding ",
+                "-O2 ",
+                "-Wall ",
+                "-Wextra"
+            ],
+            "intelliSenseMode": "gcc-x86",
+            "cStandard": "gnu99",
+            "browse": {
+                "limitSymbolsToIncludedHeaders": true
+            }
+        }
+    ],
+    "version": 4
+}
