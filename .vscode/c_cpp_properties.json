@@ -3,7 +3,7 @@
         {
             "name": "ozOS",
             "includePath": [
-                "${workspaceFolder}/*"
+                "${workspaceFolder}/**"
             ],
             "defines": [],
             "compilerPath": "/home/james/os/cross/bin/i686-elf-gcc",

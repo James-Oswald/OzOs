@@ -6,7 +6,7 @@ mkdir -p build/objects
 mkdir -p build/isoSrc/boot/grub
 $XCompPath/i686-elf-as src/boot.s -o build/objects/boot.o ||
     { echo "boot assemble failed"; exit 1; }
-$XCompPath/i686-elf-gcc -c src/kernel.c -o build/objects/kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra ||
+$XCompPath/i686-elf-gcc -c src/kernel.c -o build/objects/kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra -Isrc ||
     { echo "kernel compile failed"; exit 1; }
 $XCompPath/i686-elf-gcc -T src/linker.ld -o build/isoSrc/boot/$OsName.bin -ffreestanding -O2 -nostdlib build/objects/boot.o build/objects/kernel.o -lgcc ||
     { echo "linking failed"; exit 1; }
