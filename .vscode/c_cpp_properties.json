@@ -3,7 +3,10 @@
         {
             "name": "ozOS",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/initLib",
+                "${workspaceFolder}/src/coreLib",
+                "${workspaceFolder}/src/runLib"
             ],
             "defines": [],
             "compilerPath": "/home/james/os/cross/bin/i686-elf-gcc",

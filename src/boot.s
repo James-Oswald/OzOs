@@ -18,6 +18,11 @@ forced to be within the first 8 KiB of the kernel file.
 .long FLAGS
 .long CHECKSUM
  
+
+.section .data
+multibootTable:
+.quad 0
+.globl multibootTable
 /*
 The multiboot standard does not define the value of the stack pointer register
 (esp) and it is up to the kernel to provide a stack. This allocates room for a
@@ -75,7 +80,9 @@ _start:
 	C++ features such as global constructors and exceptions will require
 	runtime support to work as well.
 	*/
- 
+	mov %ebx, multibootTable
+	call kernelInit
+
 	/*
 	Enter the high-level kernel. The ABI requires the stack is 16-byte
 	aligned at the time of the call instruction (which afterwards pushes
@@ -84,7 +91,7 @@ _start:
 	stack since (pushed 0 bytes so far), so the alignment has thus been
 	preserved and the call is well defined.
 	*/
-	call kernel_main
+	call kernelMain
  
 	/*
 	If the system has nothing more to do, put the computer into an

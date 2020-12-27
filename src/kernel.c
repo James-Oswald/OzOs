@@ -4,12 +4,14 @@
 
 #include <terminal.h>
 #include <alert.h>
- 
-void kernel_main(void) 
-{
-	termInit();
-	for(uint8_t i = 0; i < 100; i++){
-		termSetColor(i);
-		termPrint("Hello Terminal\n");
-	}
+#include <multiboot.h>
+#include <debug.h>
+
+void kernelInit(){
+	multibootSaveData();
+}
+
+void kernelMain(){
+	//termPrint("Hello console");
+	//dbgPrintMemory((void*)0x0);
 }
