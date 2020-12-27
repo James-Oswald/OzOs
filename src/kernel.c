@@ -9,9 +9,11 @@
 
 void kernelInit(){
 	multibootSaveData();
+	lsMem();
 }
 
 void kernelMain(){
-	//termPrint("Hello console");
+	//termError("This is an error");
+	termPrint("Hello console");
 	//dbgPrintMemory((void*)0x0);
 }

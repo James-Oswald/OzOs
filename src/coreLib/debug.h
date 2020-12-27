@@ -19,7 +19,7 @@ void dbgPrintMemory(void* from){
     strcpy(buffer, "\n          ", 11);
     u32 bufferIndex = 11;
 	for(u8 i = 0; i < 16; i++){
-        dbgWriteHex(buffer, &bufferIndex, 2, i);
+        dbgWriteHex(buffer, &bufferIndex, 2, (u32)from % 16 + i);
         buffer[bufferIndex] = ' ';
         bufferIndex++;
     }

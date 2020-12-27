@@ -237,36 +237,40 @@ termPushChar:
 	ret
 	.align 16
 .L47:
-	movl	termRow, %ebx
+	movsbw	%al, %dx
+	subl	$32, %eax
+	movl	termRow, %ecx
 	movzbl	termColor, %esi
-	movzbl	%al, %eax
-	movl	termCol, %ecx
+	cmpb	$95, %al
+	movl	$63, %eax
+	movl	termCol, %ebx
+	cmovnb	%eax, %edx
 	sall	$8, %esi
-	leal	(%ebx,%ebx,4), %edx
-	orl	%esi, %eax
-	sall	$4, %edx
+	leal	(%ecx,%ecx,4), %eax
+	sall	$4, %eax
+	orl	%esi, %edx
 	movl	termBuffer, %esi
-	addl	%ecx, %edx
-	movw	%ax, (%esi,%edx,2)
-	leal	1(%ecx), %eax
-	cmpl	$79, %ecx
-	je	.L50
+	addl	%ebx, %eax
+	addl	$1, %ebx
+	movw	%dx, (%esi,%eax,2)
+	cmpl	$79, %ebx
+	jbe	.L55
+	addl	$1, %ecx
+	movl	$0, %eax
 	popl	%ebx
 	popl	%esi
-	movl	%eax, termCol
+	movl	$0, termCol
+	cmpl	$24, %ecx
 	popl	%ebp
+	cmova	%eax, %ecx
+	movl	%ecx, termRow
 	ret
 	.align 16
-.L50:
-	leal	1(%ebx), %eax
-	cmpl	$24, %ebx
-	movl	$0, %edx
+.L55:
+	movl	%ebx, termCol
 	popl	%ebx
-	movl	$0, termCol
-	cmove	%edx, %eax
 	popl	%esi
 	popl	%ebp
-	movl	%eax, termRow
 	ret
 	.size	termPushChar, .-termPushChar
 	.align 16
@@ -279,14 +283,14 @@ termPushString:
 	pushl	%esi
 	movl	12(%ebp), %esi
 	pushl	%ebx
-	je	.L63
-.L55:
+	je	.L65
+.L57:
 	testl	%esi, %esi
-	je	.L54
+	je	.L56
 	movl	8(%ebp), %ebx
 	addl	%ebx, %esi
 	.align 16
-.L57:
+.L59:
 	movsbl	(%ebx), %eax
 	subl	$12, %esp
 	addl	$1, %ebx
@@ -294,17 +298,17 @@ termPushString:
 	call	termPushChar
 	addl	$16, %esp
 	cmpl	%ebx, %esi
-	jne	.L57
-.L54:
+	jne	.L59
+.L56:
 	leal	-8(%ebp), %esp
 	popl	%ebx
 	popl	%esi
 	popl	%ebp
 	ret
 	.align 16
-.L63:
+.L65:
 	call	termInit.part.0
-	jmp	.L55
+	jmp	.L57
 	.size	termPushString, .-termPushString
 	.align 16
 	.globl	termPrint
@@ -320,30 +324,30 @@ termPrint:
 	movzbl	termInitialized, %edx
 	movsbl	(%edi), %eax
 	testb	%al, %al
-	je	.L65
+	je	.L67
 	xorl	%ebx, %ebx
 	.align 16
-.L66:
+.L68:
 	addl	$1, %ebx
 	cmpb	$0, (%edi,%ebx)
-	jne	.L66
+	jne	.L68
 	testb	%dl, %dl
-	je	.L78
-.L70:
+	je	.L80
+.L72:
 	xorl	%esi, %esi
-	jmp	.L69
+	jmp	.L71
 	.align 16
-.L79:
+.L81:
 	movsbl	(%edi,%esi), %eax
-.L69:
+.L71:
 	subl	$12, %esp
 	addl	$1, %esi
 	pushl	%eax
 	call	termPushChar
 	addl	$16, %esp
 	cmpl	%esi, %ebx
-	ja	.L79
-.L64:
+	ja	.L81
+.L66:
 	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
@@ -351,14 +355,14 @@ termPrint:
 	popl	%ebp
 	ret
 	.align 16
-.L78:
+.L80:
 	call	termInit.part.0
 	movsbl	(%edi), %eax
-	jmp	.L70
+	jmp	.L72
 	.align 16
-.L65:
+.L67:
 	testb	%dl, %dl
-	jne	.L64
+	jne	.L66
 	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
@@ -366,6 +370,64 @@ termPrint:
 	popl	%ebp
 	jmp	termInit.part.0
 	.size	termPrint, .-termPrint
+	.align 16
+	.globl	termPrintln
+	.type	termPrintln, @function
+termPrintln:
+	pushl	%ebp
+	movl	%esp, %ebp
+	pushl	%edi
+	pushl	%esi
+	pushl	%ebx
+	subl	$12, %esp
+	movl	8(%ebp), %ebx
+	movzbl	termInitialized, %edx
+	movsbl	(%ebx), %eax
+	testb	%al, %al
+	je	.L83
+	xorl	%esi, %esi
+	.align 16
+.L84:
+	addl	$1, %esi
+	cmpb	$0, (%ebx,%esi)
+	jne	.L84
+	testb	%dl, %dl
+	je	.L97
+.L88:
+	xorl	%edi, %edi
+	jmp	.L87
+	.align 16
+.L98:
+	movsbl	(%ebx,%edi), %eax
+.L87:
+	subl	$12, %esp
+	addl	$1, %edi
+	pushl	%eax
+	call	termPushChar
+	addl	$16, %esp
+	cmpl	%edi, %esi
+	ja	.L98
+.L86:
+	addl	$1, termRow
+	movl	$0, termCol
+	leal	-12(%ebp), %esp
+	popl	%ebx
+	popl	%esi
+	popl	%edi
+	popl	%ebp
+	ret
+	.align 16
+.L97:
+	call	termInit.part.0
+	movsbl	(%ebx), %eax
+	jmp	.L88
+	.align 16
+.L83:
+	testb	%dl, %dl
+	jne	.L86
+	call	termInit.part.0
+	jmp	.L86
+	.size	termPrintln, .-termPrintln
 	.align 16
 	.globl	termPrintInt
 	.type	termPrintInt, @function
@@ -378,11 +440,11 @@ termPrintInt:
 	subl	$124, %esp
 	movl	8(%ebp), %ecx
 	testl	%ecx, %ecx
-	je	.L91
+	je	.L102
 	xorl	%ebx, %ebx
 	leal	-124(%ebp), %esi
 	.align 16
-.L82:
+.L101:
 	movl	$-858993459, %eax
 	mull	%ecx
 	movl	%ecx, %eax
@@ -390,51 +452,21 @@ termPrintInt:
 	leal	(%edx,%edx,4), %edi
 	addl	%edi, %edi
 	subl	%edi, %eax
-	movl	%ebx, %edi
 	addl	$48, %eax
 	movb	%al, (%esi,%ebx)
 	movl	%ecx, %eax
-	addl	$1, %ebx
 	movl	%edx, %ecx
+	movl	%ebx, %edx
+	addl	$1, %ebx
 	cmpl	$9, %eax
-	ja	.L82
-	leal	2(%edi), %eax
-	addl	$3, %edi
-.L81:
-	movzbl	-124(%ebp), %ebx
-	movb	$10, -124(%ebp,%eax)
-	movb	$0, -124(%ebp,%edi)
-	movzbl	termInitialized, %eax
-	testb	%bl, %bl
-	je	.L83
-	xorl	%edi, %edi
-	leal	-124(%ebp), %esi
-	.align 16
-.L84:
-	addl	$1, %edi
-	cmpb	$0, (%esi,%edi)
-	jne	.L84
-	testb	%al, %al
-	je	.L98
-.L88:
-	xorl	%eax, %eax
-	movl	%esi, %ecx
-	movl	%eax, %esi
-	movsbl	%bl, %eax
-	movl	%ecx, %ebx
-	jmp	.L87
-	.align 16
-.L99:
-	movsbl	(%ebx,%esi), %eax
-.L87:
+	ja	.L101
+	addl	$2, %edx
+.L100:
 	subl	$12, %esp
-	addl	$1, %esi
-	pushl	%eax
-	call	termPushChar
+	movb	$0, -124(%ebp,%edx)
+	pushl	%esi
+	call	termPrintln
 	addl	$16, %esp
-	cmpl	%esi, %edi
-	ja	.L99
-.L80:
 	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
@@ -442,25 +474,50 @@ termPrintInt:
 	popl	%ebp
 	ret
 	.align 16
-.L98:
-	call	termInit.part.0
-	jmp	.L88
+.L102:
+	movl	$1, %edx
+	leal	-124(%ebp), %esi
+	jmp	.L100
+	.size	termPrintInt, .-termPrintInt
+	.section	.rodata.str1.1,"aMS",@progbits,1
+.LC0:
+	.string	"0123456789abcdef"
+	.text
 	.align 16
-.L83:
-	testb	%al, %al
-	jne	.L80
-	leal	-12(%ebp), %esp
+	.globl	termPrintHex
+	.type	termPrintHex, @function
+termPrintHex:
+	pushl	%ebp
+	movl	$28, %ecx
+	movl	%esp, %ebp
+	pushl	%esi
+	pushl	%ebx
+	leal	-19(%ebp), %esi
+	movl	%esi, %eax
+	subl	$16, %esp
+	movl	8(%ebp), %ebx
+	.align 16
+.L106:
+	movl	%ebx, %edx
+	addl	$1, %eax
+	shrl	%cl, %edx
+	subl	$4, %ecx
+	andl	$15, %edx
+	movzbl	.LC0(%edx), %edx
+	movb	%dl, -1(%eax)
+	cmpl	$-4, %ecx
+	jne	.L106
+	subl	$12, %esp
+	movb	$0, -10(%ebp)
+	pushl	%esi
+	call	termPrintln
+	addl	$16, %esp
+	leal	-8(%ebp), %esp
 	popl	%ebx
 	popl	%esi
-	popl	%edi
 	popl	%ebp
-	jmp	termInit.part.0
-	.align 16
-.L91:
-	movl	$2, %edi
-	movl	$1, %eax
-	jmp	.L81
-	.size	termPrintInt, .-termPrintInt
+	ret
+	.size	termPrintHex, .-termPrintHex
 	.align 16
 	.globl	termError
 	.type	termError, @function
@@ -471,39 +528,39 @@ termError:
 	pushl	%esi
 	pushl	%ebx
 	subl	$28, %esp
-	movl	termCol, %eax
+	movzbl	termColor, %eax
 	movl	8(%ebp), %ebx
-	movl	$79, termCol
+	movb	$79, termColor
 	movzbl	termInitialized, %edx
-	movl	%eax, -28(%ebp)
+	movb	%al, -25(%ebp)
 	movsbl	(%ebx), %eax
 	testb	%al, %al
-	je	.L101
+	je	.L110
 	xorl	%edi, %edi
 	.align 16
-.L102:
+.L111:
 	addl	$1, %edi
 	cmpb	$0, (%ebx,%edi)
-	jne	.L102
+	jne	.L111
 	testb	%dl, %dl
-	je	.L115
-.L106:
+	je	.L124
+.L115:
 	xorl	%esi, %esi
-	jmp	.L105
+	jmp	.L114
 	.align 16
-.L116:
+.L125:
 	movsbl	(%ebx,%esi), %eax
-.L105:
+.L114:
 	subl	$12, %esp
 	addl	$1, %esi
 	pushl	%eax
 	call	termPushChar
 	addl	$16, %esp
 	cmpl	%esi, %edi
-	ja	.L116
-.L104:
-	movzbl	-28(%ebp), %esi
-	movl	%esi, termCol
+	ja	.L125
+.L113:
+	movzbl	-25(%ebp), %eax
+	movb	%al, termColor
 	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
@@ -511,16 +568,16 @@ termError:
 	popl	%ebp
 	ret
 	.align 16
-.L115:
+.L124:
 	call	termInit.part.0
 	movsbl	(%ebx), %eax
-	jmp	.L106
+	jmp	.L115
 	.align 16
-.L101:
+.L110:
 	testb	%dl, %dl
-	jne	.L104
+	jne	.L113
 	call	termInit.part.0
-	jmp	.L104
+	jmp	.L113
 	.size	termError, .-termError
 	.align 16
 	.globl	termWarning
@@ -532,39 +589,39 @@ termWarning:
 	pushl	%esi
 	pushl	%ebx
 	subl	$28, %esp
-	movl	termCol, %eax
+	movzbl	termColor, %eax
 	movl	8(%ebp), %ebx
-	movl	$239, termCol
+	movb	$-17, termColor
 	movzbl	termInitialized, %edx
-	movl	%eax, -28(%ebp)
+	movb	%al, -25(%ebp)
 	movsbl	(%ebx), %eax
 	testb	%al, %al
-	je	.L118
+	je	.L127
 	xorl	%edi, %edi
 	.align 16
-.L119:
+.L128:
 	addl	$1, %edi
 	cmpb	$0, (%ebx,%edi)
-	jne	.L119
+	jne	.L128
 	testb	%dl, %dl
-	je	.L132
-.L123:
+	je	.L141
+.L132:
 	xorl	%esi, %esi
-	jmp	.L122
+	jmp	.L131
 	.align 16
-.L133:
+.L142:
 	movsbl	(%ebx,%esi), %eax
-.L122:
+.L131:
 	subl	$12, %esp
 	addl	$1, %esi
 	pushl	%eax
 	call	termPushChar
 	addl	$16, %esp
 	cmpl	%esi, %edi
-	ja	.L133
-.L121:
-	movzbl	-28(%ebp), %esi
-	movl	%esi, termCol
+	ja	.L142
+.L130:
+	movzbl	-25(%ebp), %eax
+	movb	%al, termColor
 	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
@@ -572,16 +629,16 @@ termWarning:
 	popl	%ebp
 	ret
 	.align 16
-.L132:
+.L141:
 	call	termInit.part.0
 	movsbl	(%ebx), %eax
-	jmp	.L123
+	jmp	.L132
 	.align 16
-.L118:
+.L127:
 	testb	%dl, %dl
-	jne	.L121
+	jne	.L130
 	call	termInit.part.0
-	jmp	.L121
+	jmp	.L130
 	.size	termWarning, .-termWarning
 	.align 16
 	.globl	alert
@@ -595,24 +652,24 @@ alert:
 	movzbl	12(%ebp), %ebx
 	sall	$8, %ebx
 	cmpb	$0, (%edx)
-	je	.L134
+	je	.L143
 	.align 16
-.L141:
+.L150:
 	xorl	%eax, %eax
 	.align 16
-.L137:
+.L146:
 	addl	$1, %eax
 	cmpb	$0, (%edx,%eax)
-	jne	.L137
+	jne	.L146
 	cmpl	%eax, %ecx
-	jnb	.L134
+	jnb	.L143
 	movsbw	(%edx,%ecx), %ax
 	orl	%ebx, %eax
 	movw	%ax, 753664(%ecx,%ecx)
 	addl	$1, %ecx
 	cmpb	$0, (%edx)
-	jne	.L141
-.L134:
+	jne	.L150
+.L143:
 	movl	-4(%ebp), %ebx
 	leave
 	ret
@@ -628,25 +685,25 @@ alertError:
 	movl	$753664, %ebx
 	movl	8(%ebp), %edx
 	cmpb	$0, (%edx)
-	je	.L142
+	je	.L151
 	.align 16
-.L149:
+.L158:
 	xorl	%eax, %eax
 	.align 16
-.L145:
+.L154:
 	addl	$1, %eax
 	cmpb	$0, (%edx,%eax)
-	jne	.L145
+	jne	.L154
 	cmpl	%eax, %ecx
-	jnb	.L142
+	jnb	.L151
 	movsbw	(%edx,%ecx), %ax
 	addl	$2, %ebx
 	addl	$1, %ecx
 	orb	$79, %ah
 	movw	%ax, -2(%ebx)
 	cmpb	$0, (%edx)
-	jne	.L149
-.L142:
+	jne	.L158
+.L151:
 	movl	-4(%ebp), %ebx
 	leave
 	ret
@@ -662,33 +719,29 @@ alertWarning:
 	movl	$753664, %ebx
 	movl	8(%ebp), %edx
 	cmpb	$0, (%edx)
-	je	.L150
+	je	.L159
 	.align 16
-.L157:
+.L166:
 	xorl	%eax, %eax
 	.align 16
-.L153:
+.L162:
 	addl	$1, %eax
 	cmpb	$0, (%edx,%eax)
-	jne	.L153
+	jne	.L162
 	cmpl	%eax, %ecx
-	jnb	.L150
+	jnb	.L159
 	movsbw	(%edx,%ecx), %ax
 	addl	$2, %ebx
 	addl	$1, %ecx
 	orw	$-4352, %ax
 	movw	%ax, -2(%ebx)
 	cmpb	$0, (%edx)
-	jne	.L157
-.L150:
+	jne	.L166
+.L159:
 	movl	-4(%ebp), %ebx
 	leave
 	ret
 	.size	alertWarning, .-alertWarning
-	.section	.rodata.str1.1,"aMS",@progbits,1
-.LC0:
-	.string	"0123456789abcdef"
-	.text
 	.align 16
 	.globl	dbgWriteHex
 	.type	dbgWriteHex, @function
@@ -703,9 +756,9 @@ dbgWriteHex:
 	movl	12(%ebp), %edi
 	leal	-4(,%esi,4), %ecx
 	testl	%esi, %esi
-	je	.L161
+	je	.L170
 	.align 16
-.L160:
+.L169:
 	movl	20(%ebp), %ebx
 	movl	8(%ebp), %edx
 	shrl	%cl, %ebx
@@ -717,8 +770,8 @@ dbgWriteHex:
 	movzbl	.LC0(%ebx), %ebx
 	movb	%bl, (%edx)
 	cmpl	%eax, %esi
-	jne	.L160
-.L161:
+	jne	.L169
+.L170:
 	addl	%esi, (%edi)
 	popl	%ebx
 	popl	%esi
@@ -746,30 +799,33 @@ dbgPrintMemory:
 	movl	8(%ebp), %eax
 	movl	%eax, -1048(%ebp)
 	xorl	%eax, %eax
-	jmp	.L171
-.L169:
+	jmp	.L179
+.L206:
 	movzbl	.LC1(%eax), %edx
-.L171:
+.L179:
 	movb	%dl, -1024(%ebp,%eax)
 	addl	$1, %eax
 	cmpl	$11, %eax
-	jne	.L169
+	jne	.L206
+	movl	-1048(%ebp), %edx
 	leal	-1013(%ebp), %eax
-	movl	$.LC0+1, %edx
 	leal	-965(%ebp), %ebx
-	movl	$48, %ecx
-	jmp	.L170
+	andl	$15, %edx
 	.align 16
-.L197:
-	movzbl	(%edx), %ecx
-	addl	$1, %edx
-.L170:
-	movb	$48, (%eax)
+.L180:
+	movl	%edx, %ecx
+	movb	$32, 2(%eax)
 	addl	$3, %eax
+	shrl	$4, %ecx
+	movzbl	.LC0(%ecx), %ecx
+	movb	%cl, -3(%eax)
+	movl	%edx, %ecx
+	addl	$1, %edx
+	andl	$15, %ecx
+	movzbl	.LC0(%ecx), %ecx
 	movb	%cl, -2(%eax)
-	movb	$32, -1(%eax)
-	cmpl	%ebx, %eax
-	jne	.L197
+	cmpl	%eax, %ebx
+	jne	.L180
 	movl	-1048(%ebp), %eax
 	leal	-906(%ebp), %esi
 	movb	$10, -965(%ebp)
@@ -778,13 +834,13 @@ dbgPrintMemory:
 	leal	-60(%eax), %edi
 	leal	-964(%ebp), %eax
 	movl	%eax, -1036(%ebp)
-.L179:
+.L187:
 	movl	-1036(%ebp), %eax
 	movl	-1048(%ebp), %ebx
 	movl	$28, %ecx
 	addl	-1040(%ebp), %ebx
 	.align 16
-.L173:
+.L181:
 	movl	%ebx, %edx
 	addl	$1, %eax
 	shrl	%cl, %edx
@@ -793,12 +849,12 @@ dbgPrintMemory:
 	movzbl	.LC0(%edx), %edx
 	movb	%dl, -1(%eax)
 	cmpl	$-4, %ecx
-	jne	.L173
+	jne	.L181
 	movb	$124, -50(%esi)
 	leal	-48(%esi), %eax
 	movb	$32, -49(%esi)
 	.align 16
-.L174:
+.L182:
 	movzbl	(%ebx), %ecx
 	movb	$32, 2(%eax)
 	addl	$3, %eax
@@ -812,23 +868,23 @@ dbgPrintMemory:
 	movzbl	.LC0(%ecx), %edx
 	movb	%dl, -2(%eax)
 	cmpl	%eax, %esi
-	jne	.L174
+	jne	.L182
 	movl	-1036(%ebp), %ecx
 	xorl	%eax, %eax
 	movl	$32, %edx
-	jmp	.L176
+	jmp	.L184
 	.align 16
-.L198:
+.L207:
 	movzbl	.LC2(%eax), %edx
-.L176:
+.L184:
 	movb	%dl, 58(%ecx,%eax)
 	addl	$1, %eax
 	cmpl	$4, %eax
-	jne	.L198
+	jne	.L207
 	movl	-1044(%ebp), %ebx
 	leal	-16(%ebx), %eax
 	.align 16
-.L178:
+.L186:
 	movzbl	-62(%edi,%eax), %edx
 	leal	-32(%edx), %ecx
 	cmpb	$95, %cl
@@ -837,7 +893,7 @@ dbgPrintMemory:
 	movb	%dl, -1024(%ebp,%eax)
 	addl	$1, %eax
 	cmpl	%ebx, %eax
-	jne	.L178
+	jne	.L186
 	leal	79(%eax), %ebx
 	movb	$10, 20(%esi)
 	subl	$63, %edi
@@ -846,47 +902,47 @@ dbgPrintMemory:
 	addl	$79, -1036(%ebp)
 	movl	%ebx, -1044(%ebp)
 	cmpl	$849, %eax
-	jne	.L179
+	jne	.L187
 	movsbl	-1024(%ebp), %eax
 	movb	$0, -174(%ebp)
 	movzbl	termInitialized, %edx
 	testb	%al, %al
-	je	.L180
+	je	.L188
 	xorl	%ebx, %ebx
-.L181:
+.L189:
 	addl	$1, %ebx
 	cmpb	$0, -1024(%ebp,%ebx)
-	jne	.L181
+	jne	.L189
 	testb	%dl, %dl
-	je	.L199
-.L185:
+	je	.L208
+.L193:
 	xorl	%esi, %esi
-	jmp	.L184
-.L200:
+	jmp	.L192
+.L209:
 	movsbl	-1024(%ebp,%esi), %eax
-.L184:
+.L192:
 	subl	$12, %esp
 	addl	$1, %esi
 	pushl	%eax
 	call	termPushChar
 	addl	$16, %esp
 	cmpl	%esi, %ebx
-	ja	.L200
-.L168:
+	ja	.L209
+.L177:
 	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
 	popl	%edi
 	popl	%ebp
 	ret
-.L199:
+.L208:
 	movb	%al, -1036(%ebp)
 	call	termInit.part.0
 	movsbl	-1036(%ebp), %eax
-	jmp	.L185
-.L180:
+	jmp	.L193
+.L188:
 	testb	%dl, %dl
-	jne	.L168
+	jne	.L177
 	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
@@ -907,138 +963,359 @@ multibootSaveData:
 	pushl	%edi
 	pushl	%esi
 	pushl	%ebx
-	subl	$24, %esp
-	pushl	multibootTable
-	call	dbgPrintMemory
+	subl	$60, %esp
 	movl	multibootTable, %eax
-	addl	$16, %esp
-	movl	(%eax), %ebx
-	andl	$64, %ebx
-	je	.L209
+	movl	%eax, -32(%ebp)
+	testb	$32, (%eax)
+	je	.L225
+	movl	-32(%ebp), %eax
+	movzbl	multibootNumMmapEntries, %edx
+	movl	44(%eax), %eax
+	movl	%eax, %esi
+	movl	%eax, -60(%ebp)
+	xorl	%eax, %eax
+	testl	%esi, %esi
+	je	.L219
+	.align 16
+.L218:
+	movl	-32(%ebp), %esi
+	movl	48(%esi), %ecx
+	addl	%eax, %ecx
+	movl	(%ecx), %edi
+	movl	4(%ecx), %esi
+	movl	12(%ecx), %ebx
+	movl	%edi, -28(%ebp)
+	movl	8(%ecx), %edi
+	movl	%esi, -40(%ebp)
+	movl	16(%ecx), %esi
+	movl	%edi, -36(%ebp)
+	movl	24(%ecx), %edi
+	movl	%esi, -44(%ebp)
+	movl	20(%ecx), %esi
+	movl	%ebx, -48(%ebp)
+	movzbl	%dl, %ebx
+	addl	$1, %edx
+	movl	%esi, -56(%ebp)
+	movl	-40(%ebp), %esi
+	sall	$5, %ebx
+	movl	%edi, -52(%ebp)
+	movl	-28(%ebp), %edi
+	leal	multibootMmapEntries(%ebx), %ecx
+	movl	%esi, multibootMmapEntries+4(%ebx)
+	movl	-44(%ebp), %esi
+	movl	%edi, multibootMmapEntries(%ebx)
+	leal	4(%edi,%eax), %eax
+	movl	-36(%ebp), %edi
+	movl	%esi, 16(%ecx)
+	movl	-56(%ebp), %esi
+	movl	%edi, multibootMmapEntries+8(%ebx)
+	movl	-48(%ebp), %ebx
+	movl	-52(%ebp), %edi
+	movl	%esi, 20(%ecx)
+	movl	%ebx, 12(%ecx)
+	movl	%edi, 24(%ecx)
+	movl	%eax, 28(%ecx)
+	movb	%dl, multibootNumMmapEntries
+	cmpl	%eax, -60(%ebp)
+	ja	.L218
+.L219:
 	leal	-12(%ebp), %esp
-	movl	$1, %eax
+	xorl	%eax, %eax
 	popl	%ebx
 	popl	%esi
 	popl	%edi
 	popl	%ebp
 	ret
 	.align 16
-.L209:
-	movl	termCol, %esi
-	movl	$79, termCol
+.L225:
+	movzbl	termColor, %esi
+	movb	$79, termColor
+	xorl	%ebx, %ebx
 	.align 16
-.L203:
+.L212:
 	addl	$1, %ebx
 	cmpb	$0, .LC3(%ebx)
-	jne	.L203
+	jne	.L212
 	cmpb	$0, termInitialized
-	je	.L210
-.L204:
+	je	.L226
+.L213:
 	movl	$.LC3+1, %edi
 	addl	$.LC3, %ebx
 	movl	$102, %eax
-	jmp	.L206
+	jmp	.L215
 	.align 16
-.L211:
+.L227:
 	movsbl	(%edi), %eax
 	addl	$1, %edi
-.L206:
+.L215:
 	subl	$12, %esp
 	pushl	%eax
 	call	termPushChar
 	addl	$16, %esp
 	cmpl	%edi, %ebx
-	jne	.L211
-	andl	$255, %esi
+	jne	.L227
+	movl	%esi, %eax
+	movb	%al, termColor
+	leal	-12(%ebp), %esp
 	movl	$1, %eax
-	movl	%esi, termCol
+	popl	%ebx
+	popl	%esi
+	popl	%edi
+	popl	%ebp
+	ret
+.L226:
+	call	termInit.part.0
+	jmp	.L213
+	.size	multibootSaveData, .-multibootSaveData
+	.section	.rodata.str1.1
+.LC4:
+	.string	"Entry:\n"
+	.text
+	.align 16
+	.globl	lsMem
+	.type	lsMem, @function
+lsMem:
+	pushl	%ebp
+	movl	$249, %ecx
+	xorl	%eax, %eax
+	movl	%esp, %ebp
+	pushl	%edi
+	pushl	%esi
+	leal	-1020(%ebp), %edi
+	pushl	%ebx
+	subl	$1036, %esp
+	movl	$0, -1024(%ebp)
+	rep stosl
+	movzbl	multibootNumMmapEntries, %ecx
+	testb	%cl, %cl
+	je	.L246
+	imull	$52, %ecx, %esi
+	leal	-1024(%ebp), %eax
+	movl	$multibootMmapEntries, %edx
+	movl	$0, -1036(%ebp)
+	movl	%esi, -1044(%ebp)
+	.align 16
+.L237:
+	xorl	%ecx, %ecx
+	movl	$69, %ebx
+	jmp	.L231
+	.align 16
+.L258:
+	movzbl	.LC4(%ecx), %ebx
+.L231:
+	movb	%bl, (%eax,%ecx)
+	addl	$1, %ecx
+	cmpl	$7, %ecx
+	jne	.L258
+	movl	%eax, -1040(%ebp)
+	movl	(%edx), %esi
+	leal	7(%eax), %ebx
+	movl	$28, %ecx
+	.align 16
+.L232:
+	movl	%esi, %edi
+	addl	$1, %ebx
+	shrl	%cl, %edi
+	subl	$4, %ecx
+	andl	$15, %edi
+	movzbl	.LC0(%edi), %eax
+	movb	%al, -1(%ebx)
+	cmpl	$-4, %ecx
+	jne	.L232
+	movl	-1040(%ebp), %eax
+	movl	4(%edx), %esi
+	movl	$28, %ecx
+	movb	$10, 15(%eax)
+	leal	16(%eax), %ebx
+	.align 16
+.L233:
+	movl	%esi, %edi
+	addl	$1, %ebx
+	shrl	%cl, %edi
+	subl	$4, %ecx
+	andl	$15, %edi
+	movzbl	.LC0(%edi), %eax
+	movb	%al, -1(%ebx)
+	cmpl	$-4, %ecx
+	jne	.L233
+	movl	-1040(%ebp), %eax
+	movl	12(%edx), %esi
+	movl	$28, %ecx
+	movb	$10, 24(%eax)
+	leal	25(%eax), %ebx
+	.align 16
+.L234:
+	movl	%esi, %edi
+	addl	$1, %ebx
+	shrl	%cl, %edi
+	subl	$4, %ecx
+	andl	$15, %edi
+	movzbl	.LC0(%edi), %eax
+	movb	%al, -1(%ebx)
+	cmpl	$-4, %ecx
+	jne	.L234
+	movl	-1040(%ebp), %eax
+	movl	20(%edx), %esi
+	movl	$28, %ecx
+	movb	$10, 33(%eax)
+	leal	34(%eax), %ebx
+	.align 16
+.L235:
+	movl	%esi, %edi
+	addl	$1, %ebx
+	shrl	%cl, %edi
+	subl	$4, %ecx
+	andl	$15, %edi
+	movzbl	.LC0(%edi), %eax
+	movb	%al, -1(%ebx)
+	cmpl	$-4, %ecx
+	jne	.L235
+	movl	-1040(%ebp), %eax
+	movl	28(%edx), %esi
+	movl	$28, %ecx
+	movb	$10, 42(%eax)
+	leal	43(%eax), %ebx
+	.align 16
+.L236:
+	movl	%esi, %edi
+	addl	$1, %ebx
+	shrl	%cl, %edi
+	subl	$4, %ecx
+	andl	$15, %edi
+	movzbl	.LC0(%edi), %eax
+	movb	%al, -1(%ebx)
+	cmpl	$-4, %ecx
+	jne	.L236
+	movl	-1040(%ebp), %eax
+	addl	$52, -1036(%ebp)
+	addl	$32, %edx
+	movl	-1036(%ebp), %esi
+	movb	$10, 51(%eax)
+	addl	$52, %eax
+	cmpl	-1044(%ebp), %esi
+	jne	.L237
+.L229:
+	movl	-1044(%ebp), %eax
+	movb	$0, -1024(%ebp,%eax)
+	movzbl	-1024(%ebp), %ebx
+	movzbl	termInitialized, %eax
+	testb	%bl, %bl
+	je	.L238
+	xorl	%esi, %esi
+	.align 16
+.L239:
+	addl	$1, %esi
+	cmpb	$0, -1024(%ebp,%esi)
+	jne	.L239
+	testb	%al, %al
+	je	.L259
+.L243:
+	xorl	%edi, %edi
+	movsbl	%bl, %eax
+	jmp	.L242
+	.align 16
+.L260:
+	movsbl	-1024(%ebp,%edi), %eax
+.L242:
+	subl	$12, %esp
+	addl	$1, %edi
+	pushl	%eax
+	call	termPushChar
+	addl	$16, %esp
+	cmpl	%edi, %esi
+	ja	.L260
+.L228:
 	leal	-12(%ebp), %esp
 	popl	%ebx
 	popl	%esi
 	popl	%edi
 	popl	%ebp
 	ret
-	.align 16
-.L210:
+.L259:
 	call	termInit.part.0
-	jmp	.L204
-	.size	multibootSaveData, .-multibootSaveData
+	jmp	.L243
+.L238:
+	testb	%al, %al
+	jne	.L228
+	leal	-12(%ebp), %esp
+	popl	%ebx
+	popl	%esi
+	popl	%edi
+	popl	%ebp
+	jmp	termInit.part.0
+.L246:
+	movl	$0, -1044(%ebp)
+	jmp	.L229
+	.size	lsMem, .-lsMem
 	.align 16
 	.globl	kernelInit
 	.type	kernelInit, @function
 kernelInit:
 	pushl	%ebp
 	movl	%esp, %ebp
-	pushl	%edi
-	pushl	%esi
-	pushl	%ebx
-	subl	$24, %esp
-	pushl	multibootTable
-	call	dbgPrintMemory
-	movl	multibootTable, %eax
-	addl	$16, %esp
-	movl	(%eax), %ebx
-	andl	$64, %ebx
-	je	.L220
-	leal	-12(%ebp), %esp
-	popl	%ebx
-	popl	%esi
-	popl	%edi
-	popl	%ebp
-	ret
-	.align 16
-.L220:
-	movl	termCol, %esi
-	movl	$79, termCol
-	.align 16
-.L214:
-	addl	$1, %ebx
-	cmpb	$0, .LC3(%ebx)
-	jne	.L214
-	cmpb	$0, termInitialized
-	je	.L221
-.L215:
-	movl	$.LC3+1, %edi
-	addl	$.LC3, %ebx
-	movl	$102, %eax
-	jmp	.L217
-	.align 16
-.L222:
-	movsbl	(%edi), %eax
-	addl	$1, %edi
-.L217:
-	subl	$12, %esp
-	pushl	%eax
-	call	termPushChar
-	addl	$16, %esp
-	cmpl	%edi, %ebx
-	jne	.L222
-	andl	$255, %esi
-	movl	%esi, termCol
-	leal	-12(%ebp), %esp
-	popl	%ebx
-	popl	%esi
-	popl	%edi
-	popl	%ebp
-	ret
-	.align 16
-.L221:
-	call	termInit.part.0
-	jmp	.L215
+	subl	$8, %esp
+	call	multibootSaveData
+	leave
+	jmp	lsMem
 	.size	kernelInit, .-kernelInit
+	.section	.rodata.str1.1
+.LC5:
+	.string	"Hello console"
+	.text
 	.align 16
 	.globl	kernelMain
 	.type	kernelMain, @function
 kernelMain:
+	pushl	%ebp
+	movl	%esp, %ebp
+	pushl	%esi
+	pushl	%ebx
+	xorl	%ebx, %ebx
+	.align 16
+.L264:
+	addl	$1, %ebx
+	cmpb	$0, .LC5(%ebx)
+	jne	.L264
+	cmpb	$0, termInitialized
+	je	.L270
+.L265:
+	movl	$.LC5+1, %esi
+	addl	$.LC5, %ebx
+	movl	$72, %eax
+	jmp	.L267
+	.align 16
+.L271:
+	movsbl	(%esi), %eax
+	addl	$1, %esi
+.L267:
+	subl	$12, %esp
+	pushl	%eax
+	call	termPushChar
+	addl	$16, %esp
+	cmpl	%esi, %ebx
+	jne	.L271
+	leal	-8(%ebp), %esp
+	popl	%ebx
+	popl	%esi
+	popl	%ebp
 	ret
+	.align 16
+.L270:
+	call	termInit.part.0
+	jmp	.L265
 	.size	kernelMain, .-kernelMain
 	.globl	multibootMmapEntries
 	.section	.bss
 	.align 32
 	.type	multibootMmapEntries, @object
-	.size	multibootMmapEntries, 280
+	.size	multibootMmapEntries, 320
 multibootMmapEntries:
-	.zero	280
+	.zero	320
+	.globl	multibootNumMmapEntries
+	.type	multibootNumMmapEntries, @object
+	.size	multibootNumMmapEntries, 1
+multibootNumMmapEntries:
+	.zero	1
 	.globl	termInitialized
 	.type	termInitialized, @object
 	.size	termInitialized, 1
@@ -1051,11 +1328,13 @@ termInitialized:
 termBuffer:
 	.zero	4
 	.globl	termColor
+	.data
 	.type	termColor, @object
 	.size	termColor, 1
 termColor:
-	.zero	1
+	.byte	112
 	.globl	termCol
+	.section	.bss
 	.align 4
 	.type	termCol, @object
 	.size	termCol, 4

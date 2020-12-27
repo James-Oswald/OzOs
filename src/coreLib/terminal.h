@@ -10,10 +10,10 @@
 static const size_t termWidth = 80;
 static const size_t termHeight = 25;
 
-size_t termRow;  		//the current row index
-size_t termCol; 	//the current col index
-uint8_t termColor;		//background color
-uint16_t* termBuffer;	//pointer to the text buffer in memory
+size_t termRow = 0;  		//the current row index
+size_t termCol = 0; 	    //the current col index
+uint8_t termColor = 0x70;	//background color
+uint16_t* termBuffer;	    //pointer to the text buffer in memory
 bool termInitialized = false;
 
 
@@ -62,12 +62,14 @@ void termPushChar(char c){
                 termRow++;
             return;
         default:
-            termSetChar(c, termColor, termCol, termRow);
-            if (++termCol == termWidth){
-                termCol = 0;
-                if (++termRow == termHeight)
-                    termRow = 0;
-            }
+            termSetChar(c < 32 || c > 126 ? '?' : c, termColor, termCol, termRow);
+            termCol++;
+    }
+    if (termCol >= termWidth){
+        termCol = 0;
+        termRow++;
+        if (termRow >= termHeight)
+            termRow = 0;
     }
 }
 
@@ -82,28 +84,45 @@ void termPrint(char* data){
 	termPushString(data, strLen(data));
 }
 
+void termPrintln(char* data){
+	termPushString(data, strLen(data));
+    termCol = 0;
+    termRow++;
+}
+
 void termPrintInt(u32 data){
 	char buffer[100];
     u32 i = 0;
-    for(; data != 0; i++, data /= 10)
+    for(; data != 0; i++){
         buffer[i] = (char)((data % 10) + 48);
-    buffer[i + 1] = '\n';
-    buffer[i + 2] = '\0';
-    termPrint(buffer);
+        data /= 10;
+    }
+    buffer[i + 1] = '\0';
+    termPrintln(buffer);
+}
+
+void termPrintHex(u32 data){
+	char buffer[11];
+    static char* codes = "0123456789abcdef";
+    u32 i = 0;
+    for(; i < 8; i++)
+        buffer[i] = codes[data >> ((7-i) * 4) & 0xf];
+    buffer[i + 1] = '\0';
+    termPrintln(buffer);
 }
 
 void termError(char* data){
-    u8 oldColor = termCol;
-    termCol = 0x4f;
+    u8 oldColor = termColor;
+    termColor = 0x4f;
     termPrint(data);
-    termCol = oldColor;
+    termColor = oldColor;
 }
 
 void termWarning(char* data){
-    u8 oldColor = termCol;
-    termCol = 0xef;
+    u8 oldColor = termColor;
+    termColor = 0xef;
     termPrint(data);
-    termCol = oldColor;
+    termColor = oldColor;
 }
 
 #endif
