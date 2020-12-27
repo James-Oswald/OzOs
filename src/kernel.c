@@ -9,7 +9,7 @@
 
 void kernelInit(){
 	multibootSaveData();
-	lsMem();
+	multibootPrintMmap();
 }
 
 void kernelMain(){

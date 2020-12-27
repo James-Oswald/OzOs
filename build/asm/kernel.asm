@@ -963,60 +963,55 @@ multibootSaveData:
 	pushl	%edi
 	pushl	%esi
 	pushl	%ebx
-	subl	$60, %esp
+	subl	$44, %esp
 	movl	multibootTable, %eax
 	movl	%eax, -32(%ebp)
 	testb	$32, (%eax)
 	je	.L225
 	movl	-32(%ebp), %eax
-	movzbl	multibootNumMmapEntries, %edx
-	movl	44(%eax), %eax
-	movl	%eax, %esi
-	movl	%eax, -60(%ebp)
-	xorl	%eax, %eax
-	testl	%esi, %esi
+	xorl	%edi, %edi
+	movl	44(%eax), %ecx
+	movzbl	multibootNumMmapEntries, %eax
+	movl	%ecx, -52(%ebp)
+	testl	%ecx, %ecx
 	je	.L219
+	movb	%al, -25(%ebp)
+	movl	%edi, %ecx
 	.align 16
 .L218:
-	movl	-32(%ebp), %esi
-	movl	48(%esi), %ecx
-	addl	%eax, %ecx
-	movl	(%ecx), %edi
-	movl	4(%ecx), %esi
-	movl	12(%ecx), %ebx
-	movl	%edi, -28(%ebp)
-	movl	8(%ecx), %edi
+	movl	-32(%ebp), %edi
+	movl	48(%edi), %eax
+	addl	%ecx, %eax
+	movl	4(%eax), %esi
+	movl	8(%eax), %edi
+	movl	(%eax), %edx
+	movl	12(%eax), %ebx
 	movl	%esi, -40(%ebp)
-	movl	16(%ecx), %esi
+	movl	16(%eax), %esi
 	movl	%edi, -36(%ebp)
-	movl	24(%ecx), %edi
+	movl	24(%eax), %edi
+	leal	4(%edx,%ecx), %ecx
 	movl	%esi, -44(%ebp)
-	movl	20(%ecx), %esi
+	movl	20(%eax), %esi
+	movzbl	-25(%ebp), %eax
 	movl	%ebx, -48(%ebp)
-	movzbl	%dl, %ebx
-	addl	$1, %edx
-	movl	%esi, -56(%ebp)
-	movl	-40(%ebp), %esi
-	sall	$5, %ebx
-	movl	%edi, -52(%ebp)
-	movl	-28(%ebp), %edi
-	leal	multibootMmapEntries(%ebx), %ecx
-	movl	%esi, multibootMmapEntries+4(%ebx)
-	movl	-44(%ebp), %esi
-	movl	%edi, multibootMmapEntries(%ebx)
-	leal	4(%edi,%eax), %eax
-	movl	-36(%ebp), %edi
-	movl	%esi, 16(%ecx)
-	movl	-56(%ebp), %esi
-	movl	%edi, multibootMmapEntries+8(%ebx)
-	movl	-48(%ebp), %ebx
-	movl	-52(%ebp), %edi
-	movl	%esi, 20(%ecx)
-	movl	%ebx, 12(%ecx)
-	movl	%edi, 24(%ecx)
-	movl	%eax, 28(%ecx)
-	movb	%dl, multibootNumMmapEntries
-	cmpl	%eax, -60(%ebp)
+	addb	$1, -25(%ebp)
+	imull	$28, %eax, %eax
+	leal	multibootMmapEntries(%eax), %ebx
+	movl	%edx, multibootMmapEntries(%eax)
+	movl	-40(%ebp), %eax
+	movl	-36(%ebp), %edx
+	movl	%esi, 20(%ebx)
+	movl	%eax, 4(%ebx)
+	movl	-48(%ebp), %eax
+	movl	%edx, 8(%ebx)
+	movl	-44(%ebp), %edx
+	movl	%eax, 12(%ebx)
+	movzbl	-25(%ebp), %eax
+	movl	%edx, 16(%ebx)
+	movl	%edi, 24(%ebx)
+	movb	%al, multibootNumMmapEntries
+	cmpl	%ecx, -52(%ebp)
 	ja	.L218
 .L219:
 	leal	-12(%ebp), %esp
@@ -1072,9 +1067,9 @@ multibootSaveData:
 	.string	"Entry:\n"
 	.text
 	.align 16
-	.globl	lsMem
-	.type	lsMem, @function
-lsMem:
+	.globl	multibootPrintMmap
+	.type	multibootPrintMmap, @function
+multibootPrintMmap:
 	pushl	%ebp
 	movl	$249, %ecx
 	xorl	%eax, %eax
@@ -1088,25 +1083,25 @@ lsMem:
 	rep stosl
 	movzbl	multibootNumMmapEntries, %ecx
 	testb	%cl, %cl
-	je	.L246
-	imull	$52, %ecx, %esi
+	je	.L245
+	imull	$43, %ecx, %esi
 	leal	-1024(%ebp), %eax
 	movl	$multibootMmapEntries, %edx
 	movl	$0, -1036(%ebp)
 	movl	%esi, -1044(%ebp)
 	.align 16
-.L237:
+.L236:
 	xorl	%ecx, %ecx
 	movl	$69, %ebx
 	jmp	.L231
 	.align 16
-.L258:
+.L256:
 	movzbl	.LC4(%ecx), %ebx
 .L231:
 	movb	%bl, (%eax,%ecx)
 	addl	$1, %ecx
 	cmpl	$7, %ecx
-	jne	.L258
+	jne	.L256
 	movl	%eax, -1040(%ebp)
 	movl	(%edx), %esi
 	leal	7(%eax), %ebx
@@ -1171,59 +1166,43 @@ lsMem:
 	cmpl	$-4, %ecx
 	jne	.L235
 	movl	-1040(%ebp), %eax
-	movl	28(%edx), %esi
-	movl	$28, %ecx
-	movb	$10, 42(%eax)
-	leal	43(%eax), %ebx
-	.align 16
-.L236:
-	movl	%esi, %edi
-	addl	$1, %ebx
-	shrl	%cl, %edi
-	subl	$4, %ecx
-	andl	$15, %edi
-	movzbl	.LC0(%edi), %eax
-	movb	%al, -1(%ebx)
-	cmpl	$-4, %ecx
-	jne	.L236
-	movl	-1040(%ebp), %eax
-	addl	$52, -1036(%ebp)
-	addl	$32, %edx
+	addl	$43, -1036(%ebp)
+	addl	$28, %edx
 	movl	-1036(%ebp), %esi
-	movb	$10, 51(%eax)
-	addl	$52, %eax
+	movb	$10, 42(%eax)
+	addl	$43, %eax
 	cmpl	-1044(%ebp), %esi
-	jne	.L237
+	jne	.L236
 .L229:
 	movl	-1044(%ebp), %eax
 	movb	$0, -1024(%ebp,%eax)
 	movzbl	-1024(%ebp), %ebx
 	movzbl	termInitialized, %eax
 	testb	%bl, %bl
-	je	.L238
+	je	.L237
 	xorl	%esi, %esi
 	.align 16
-.L239:
+.L238:
 	addl	$1, %esi
 	cmpb	$0, -1024(%ebp,%esi)
-	jne	.L239
+	jne	.L238
 	testb	%al, %al
-	je	.L259
-.L243:
+	je	.L257
+.L242:
 	xorl	%edi, %edi
 	movsbl	%bl, %eax
-	jmp	.L242
+	jmp	.L241
 	.align 16
-.L260:
+.L258:
 	movsbl	-1024(%ebp,%edi), %eax
-.L242:
+.L241:
 	subl	$12, %esp
 	addl	$1, %edi
 	pushl	%eax
 	call	termPushChar
 	addl	$16, %esp
 	cmpl	%edi, %esi
-	ja	.L260
+	ja	.L258
 .L228:
 	leal	-12(%ebp), %esp
 	popl	%ebx
@@ -1231,10 +1210,10 @@ lsMem:
 	popl	%edi
 	popl	%ebp
 	ret
-.L259:
+.L257:
 	call	termInit.part.0
-	jmp	.L243
-.L238:
+	jmp	.L242
+.L237:
 	testb	%al, %al
 	jne	.L228
 	leal	-12(%ebp), %esp
@@ -1243,10 +1222,10 @@ lsMem:
 	popl	%edi
 	popl	%ebp
 	jmp	termInit.part.0
-.L246:
+.L245:
 	movl	$0, -1044(%ebp)
 	jmp	.L229
-	.size	lsMem, .-lsMem
+	.size	multibootPrintMmap, .-multibootPrintMmap
 	.align 16
 	.globl	kernelInit
 	.type	kernelInit, @function
@@ -1256,7 +1235,7 @@ kernelInit:
 	subl	$8, %esp
 	call	multibootSaveData
 	leave
-	jmp	lsMem
+	jmp	multibootPrintMmap
 	.size	kernelInit, .-kernelInit
 	.section	.rodata.str1.1
 .LC5:
@@ -1272,45 +1251,45 @@ kernelMain:
 	pushl	%ebx
 	xorl	%ebx, %ebx
 	.align 16
-.L264:
+.L262:
 	addl	$1, %ebx
 	cmpb	$0, .LC5(%ebx)
-	jne	.L264
+	jne	.L262
 	cmpb	$0, termInitialized
-	je	.L270
-.L265:
+	je	.L268
+.L263:
 	movl	$.LC5+1, %esi
 	addl	$.LC5, %ebx
 	movl	$72, %eax
-	jmp	.L267
+	jmp	.L265
 	.align 16
-.L271:
+.L269:
 	movsbl	(%esi), %eax
 	addl	$1, %esi
-.L267:
+.L265:
 	subl	$12, %esp
 	pushl	%eax
 	call	termPushChar
 	addl	$16, %esp
 	cmpl	%esi, %ebx
-	jne	.L271
+	jne	.L269
 	leal	-8(%ebp), %esp
 	popl	%ebx
 	popl	%esi
 	popl	%ebp
 	ret
 	.align 16
-.L270:
+.L268:
 	call	termInit.part.0
-	jmp	.L265
+	jmp	.L263
 	.size	kernelMain, .-kernelMain
 	.globl	multibootMmapEntries
 	.section	.bss
 	.align 32
 	.type	multibootMmapEntries, @object
-	.size	multibootMmapEntries, 320
+	.size	multibootMmapEntries, 280
 multibootMmapEntries:
-	.zero	320
+	.zero	280
 	.globl	multibootNumMmapEntries
 	.type	multibootNumMmapEntries, @object
 	.size	multibootNumMmapEntries, 1
