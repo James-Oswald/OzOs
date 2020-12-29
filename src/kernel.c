@@ -9,6 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <gdt.h>
 #include <terminal.h>
 #include <alert.h>
 #include <multiboot.h>
@@ -24,6 +25,7 @@
  */
 void kernelInit(){
 	multibootSaveData();
+	gdtInit();
 	//multibootPrintMmap();
 
 }
