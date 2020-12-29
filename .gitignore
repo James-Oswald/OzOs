@@ -1,2 +1,4 @@
 build/objects
 build/isoSrc
+build/asm
+docs/*

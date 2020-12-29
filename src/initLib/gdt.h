@@ -1,11 +1,19 @@
 
-
+/** 
+ * @file multiboot.h 
+ * @author James T Oswald
+ * This header library contains code for loading the Global Descriptor Table.
+ * 
+ * @ref https://wiki.osdev.org/Interrupt_Descriptor_Table
+ * @ref http://www.osdever.net/bkerndev/Docs/idt.htm
+ * */ 
 
 //https://wiki.osdev.org/LGDT
 //https://wiki.osdev.org/GDT_Tutorial
 //https://samypesse.gitbook.io/how-to-create-an-operating-system/chapter-6
 
 #ifndef gdt_header
+/** The include guard */
 #define gdt_header
 
 #include<int.h>
@@ -88,9 +96,11 @@ gdtDescriptor* newGdtDescriptor(gdtDescriptor* desc, u16 limit, u32 offset){
     desc->offset = offset;
 }
 
+gdtDescriptor gdtDesc;
+gdtEntry gdtRegistry[gdtSize];
+
 void gdtInit(){
-    gdtDescriptor gdtDesc;
-    gdtEntry gdtRegistry[gdtSize];
+    newGdtEntry(&gdtRegistry[0], , u32 limit, u8 acces, u8 flags)
 }
 
 #endif
