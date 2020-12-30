@@ -57,11 +57,19 @@ gdtEntry gdtRegistry[gdtSize];
 
 extern void gdtLoad();
 
+
 void gdtInit(){
+    //to understand what all these random flags mean it is essentail to see GDT documentation
+    // https://wiki.osdev.org/LGDT
     newGdtEntry(&gdtRegistry[0], 0, 0, 0, 0);
-    newGdtEntry(&gdtRegistry[1], 0, 0xffffffff, 0b10011010, 0b0100); //code segment, offset 0x8
-    newGdtEntry(&gdtRegistry[2], 0, 0xffffffff, 0b10011010, 0b0100); //data segment, offset 0x10
-    gdtDesc.limit = sizeof(gdtRegistry) - 1;
+    newGdtEntry(&gdtRegistry[1], 0, 0xffffffff, 0b10011011, 0b1100); //code segment, offset 0x8
+    newGdtEntry(&gdtRegistry[2], 0, 0xffffffff, 0b10010011, 0b1100); //data segment, offset 0x10
+
+    //These were recomended by the tutorial, for some reason the granulatity bit needs to be set?
+    //Without setting the granularity bit the longjump from gdtLoad fails.
+    //newGdtEntry(&gdtRegistry[1], 0, 0xffffffff, 0x9A, 0xd); //code segment, offset 0x8
+    //newGdtEntry(&gdtRegistry[2], 0, 0xffffffff, 0x92, 0xd); //data segment, offset 0x10
+    gdtDesc.limit = sizeof(gdtRegistry);
     gdtDesc.offset = (u32)&gdtRegistry;
     gdtLoad();
 }

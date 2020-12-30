@@ -27,7 +27,6 @@ void kernelInit(){
 	multibootSaveData();
 	gdtInit();
 	//multibootPrintMmap();
-
 }
 
 void kernelMain(){

@@ -6,6 +6,12 @@
 #include<stddef.h>
 #include<int.h>
 #include<terminal.h>
+#include<terminal.h>
+
+void dbgAsmAlert(){
+    termError("yello");
+    asm("hlt");
+}
 
 void dbgWriteHex(char* buffer, u32* offset, u32 length, u32 val){
     static char* codes = "0123456789abcdef";

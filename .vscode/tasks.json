@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "startQEMU",
+            "type": "shell",
+            "command":"${workspaceRoot}/tools/run.sh",
+        },
+        {
+            "label": "killQEMU",
+            "type": "shell",
+            "command":"/mnt/c/Windows/System32/cmd.exe /C taskkill /IM qemu-system-i386.exe /F",
+        }
+    ]
+}

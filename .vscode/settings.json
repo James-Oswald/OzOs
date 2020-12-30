@@ -3,5 +3,6 @@
         "string": "c"
     },
     "C_Cpp.default.compilerPath": "$HOME/os/cross/bin/i686-elf-gcc",
-    "C_Cpp.default.cStandard": "c99"
+    "C_Cpp.default.cStandard": "c99",
+    "remote.WSL.useShellEnvironment": true
 }
