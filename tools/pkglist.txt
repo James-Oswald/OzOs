@@ -9,3 +9,4 @@ texinfo
 grub-common
 grub-pc-bin
 xorriso
+doxygen
