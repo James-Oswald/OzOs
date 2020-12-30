@@ -4,5 +4,5 @@ cd $curDir/..
 echo "running QEMU"
 curDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $curDir/..
-source tools/config.cfg
+source tools/build.cfg
 nohup $($QEMUPath/qemu-system-i386.exe -s -S -cdrom build/$OsName.iso) & 
