@@ -12,4 +12,5 @@ gdtLoad:
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
+    sti
     ret

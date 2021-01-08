@@ -31,6 +31,7 @@ void kernelInit(){
 
 void kernelMain(){
 	//termError("This is an error");
-	termPrint("Hello console");
+	termPrint("Hello IEEE");
+	termError("This project was a mistake");
 	//dbgPrintMemory((void*)0x0);
 }

@@ -13,7 +13,7 @@
  
 .section .data
 multibootTable:
-.quad 0
+.long 0
 .globl multibootTable
 
 .section .bss
@@ -26,13 +26,14 @@ stack_top:
 .global _start
 .type _start, @function
 _start:
-	mov $stack_top, %esp
-	mov %ebx, multibootTable
-	call kernelInit
-	call kernelMain
+	mov $stack_top, %esp		  /* Set up the stack */
+	mov %ebx, multibootTable	/* save the multiboot info structure pointer */
+	call kernelInit				    /* Initilize the kernel */
+	call kernelMain				    /* Run the kernel */
 	cli
-1:	hlt
-	jmp 1b
+.deathLoop:	
+	hlt
+	jmp deathLoop
  
 /*
 Set the size of the _start symbol to the current location '.' minus its start.

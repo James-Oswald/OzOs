@@ -3,14 +3,13 @@
  * @file gdt.h 
  * @author James T Oswald
  * @brief This header library contains code for loading the Global Descriptor Table.
- * @details For information on why we need a global descriptor table and how we set it up, see
- * <a href="https://wiki.osdev.org/LGDT"></a>
- * <a href="https://wiki.osdev.org/GDT_Tutorial"></a>
- * <a href="https://samypesse.gitbook.io/how-to-create-an-operating-system/chapter-6"></a>
+ * @details For information on why we need a global descriptor table and how we set it up, see:
+ * <a href="https://wiki.osdev.org/LGDT">The OS dev GDT reffrence</a>,
+ * <a href="https://wiki.osdev.org/GDT_Tutorial">The OS dev GDT tutorial</a>,
+ * <a href="https://samypesse.gitbook.io/how-to-create-an-operating-system/chapter-6">This other tutorial</a>
  * */ 
 
 #ifndef gdt_header
-/** The include guard */
 #define gdt_header
 
 #include<int.h>
@@ -35,19 +34,19 @@ typedef struct gdtDescriptor gdtDescriptor;
  * @details entries are 8 bytes and contain information about memory segments.
  * for some reason these segments are stored all scrablmed, for the details on whats in here see 
  * <a href="https://wiki.osdev.org/LGDT">https://wiki.osdev.org/LGDT</a>
- * @var gdtEntry::limit0_15
+ * @var u16 gdtEntry::limit0_15
  * @brief first 2 bytes of the limit (size of the segment)
- * @var gdtEntry::base0_15
+ * @var u16 gdtEntry::base0_15
  * @brief first 2 bytes of the base (start address of the segment)
- * @var gdtEntry::base16_23
+ * @var u8 gdtEntry::base16_23
  * @brief third byte of the base (start address of the segment)
- * @var gdtEntry::access
+ * @var u8 gdtEntry::access
  * @brief access flags for the segment, includes the priv level. 
- * @var gdtEntry::limit16_19
+ * @var u8 gdtEntry::limit16_19
  * @brief final nibble of the limit (size of the segment)
- * @var gdtEntry::flags
+ * @var u8 gdtEntry::flags
  * @brief even more flags for the segment, inclduing granularity and size
- * @var gdtEntry::base16_23
+ * @var u8 gdtEntry::base24_31
  * @brief fourth byte of the base (start address of the segment)
  */
 struct gdtEntry{
